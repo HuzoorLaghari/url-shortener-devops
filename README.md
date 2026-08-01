@@ -1,8 +1,5 @@
 # Node URL Shortener
 
-![](https://img.shields.io/badge/node-success-brightgreen.svg)
-![](https://img.shields.io/badge/test-success-brightgreen.svg)
-
 ## Stack
 
 ![](https://img.shields.io/badge/node_18+-✓-blue.svg)
