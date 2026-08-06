@@ -1,11 +1,31 @@
 # Node URL Shortener
 
+A URL shortener built with Express, Sequelize and MySQL, using Base58-encoded ids as short codes.
+
 ## Stack
 
 ![](https://img.shields.io/badge/node_18+-✓-blue.svg)
 ![](https://img.shields.io/badge/ES6-✓-blue.svg)
 ![](https://img.shields.io/badge/express-✓-blue.svg)
 ![](https://img.shields.io/badge/sequelize-✓-blue.svg)
+
+## Screenshots
+
+<p align="center">
+  <img src="https://github.com/murraco/node-url-shortener/blob/master/screenshot.png?raw=1" width="90%" alt="App screenshot" />
+</p>
+
+## Introduction
+
+### What is a URL shortener?
+
+URL shortening turns a long URL into a shorter one that redirects to the original. The short link is easier to share and remember.
+
+### How does this project implement it?
+
+The database stores each URL with an auto-increment numeric `id`. The short code in the path is that `id` encoded in **Base58** (alphanumeric, excluding ambiguous characters like `0`, `O`, `I`, `l`). When someone opens `/:encodedId`, the server decodes it to `id`, loads the row, and redirects to `longUrl`.
+
+There is a **unique index** on `longUrl` so the same URL is never stored twice; concurrent `POST` requests are handled with `findOrCreate` and a fallback if a uniqueness race occurs.
 
 ## File structure
 
@@ -46,54 +66,20 @@ node-url-shortener/
 ├── test/
 │   └── url.test.js
 │
-├── .eslintrc.json
-├── .gitignore
-├── .sequelizerc
-├── index.js                 * Application entry point
-├── LICENSE
-├── package.json
-├── package-lock.json
-└── README.md
+├── .eslintrc.json           * ESLint configuration file
+├── .gitignore               * Example git ignore file
+├── .sequelizerc             * Sequelize CLI paths
+├── index.js                 * Entry point of our Node's app
+├── LICENSE                  * MIT License
+├── package.json             * Defines our JavaScript dependencies
+├── package-lock.json        * Defines our exact JavaScript dependencies tree
+└── README.md                * This file
 ```
-
-## Screenshot
-
-<p align="center">
-  <img src="https://github.com/murraco/node-url-shortener/blob/master/screenshot.png?raw=1" width="90%" alt="App screenshot" />
-</p>
-
-## Introduction
-
-### What is a URL shortener?
-
-URL shortening turns a long URL into a shorter one that redirects to the original. The short link is easier to share and remember.
-
-### How does this project implement it?
-
-The database stores each URL with an auto-increment numeric `id`. The short code in the path is that `id` encoded in **Base58** (alphanumeric, excluding ambiguous characters like `0`, `O`, `I`, `l`). When someone opens `/:encodedId`, the server decodes it to `id`, loads the row, and redirects to `longUrl`.
-
-There is a **unique index** on `longUrl` so the same URL is never stored twice; concurrent `POST` requests are handled with `findOrCreate` and a fallback if a uniqueness race occurs.
 
 ## Requirements
 
 - **Node.js** 18 or newer (LTS recommended)
 - **MySQL** 5.7+ or 8.x
-
-## Environment variables
-
-| Variable | Description | Default (from env files) |
-| -------- | ----------- | ------------------------- |
-| `NODE_ENV` | `development`, `test`, or `production` | `development` |
-| `PORT` | HTTP port | `3000` |
-| `DB_HOST` | MySQL host | `localhost` |
-| `DB_PORT` | MySQL port | `3306` |
-| `DB_NAME` | Database name | `shortener_dev` / `shortener_test` / `shortener` by environment |
-| `DB_USER` | MySQL user | `root` |
-| `DB_PASSWORD` | MySQL password | `root` (override in production) |
-| `PUBLIC_URL` or `BASE_URL` | Public base URL for short links (no trailing slash), e.g. `https://short.example.com` | If unset, derived from the incoming request (`req.protocol` and `Host`) |
-| `TRUST_PROXY` | Set to `true` or `1` if the app sits behind a reverse proxy so `X-Forwarded-*` is honored | unset |
-
-Copy values into a `.env` file or your host’s secret manager. The `.env` file is gitignored; do not commit real passwords.
 
 ## Installation
 
@@ -110,7 +96,7 @@ cd node-url-shortener
 npm install
 ```
 
-3. Configure the database using the variables above (optional `.env` or shell exports). The files under `config/env/` only supply defaults and read from `process.env`.
+3. Configure the database using the variables in [Configuration](#configuration) (optional `.env` or shell exports). The files under `config/env/` only supply defaults and read from `process.env`.
 
 ## Database setup
 
@@ -142,6 +128,22 @@ npm run migrate
 ```
 
 In **development** only, the app also runs `sequelize.sync()` on startup so tables are created if missing. **Production** does not sync on startup; run migrations before deploying.
+
+## Configuration
+
+| Variable | Description | Default (from env files) |
+| -------- | ----------- | ------------------------- |
+| `NODE_ENV` | `development`, `test`, or `production` | `development` |
+| `PORT` | HTTP port | `3000` |
+| `DB_HOST` | MySQL host | `localhost` |
+| `DB_PORT` | MySQL port | `3306` |
+| `DB_NAME` | Database name | `shortener_dev` / `shortener_test` / `shortener` by environment |
+| `DB_USER` | MySQL user | `root` |
+| `DB_PASSWORD` | MySQL password | `root` (override in production) |
+| `PUBLIC_URL` or `BASE_URL` | Public base URL for short links (no trailing slash), e.g. `https://short.example.com` | If unset, derived from the incoming request (`req.protocol` and `Host`) |
+| `TRUST_PROXY` | Set to `true` or `1` if the app sits behind a reverse proxy so `X-Forwarded-*` is honored | unset |
+
+Copy values into a `.env` file or your host’s secret manager. The `.env` file is gitignored; do not commit real passwords.
 
 ## Running the app
 
@@ -183,12 +185,19 @@ npm test
 
 `npm audit` was run after dependency updates; a few advisories may remain in transitive dev dependencies (for example Mocha). Re-run `npm audit` periodically.
 
-## Contributing
+## Contribution
 
 - Report issues
-- Open pull requests with improvements
-- Contact: mauriurraco@gmail.com
+- Open pull request with improvements
+- Spread the word
+- Reach out to me directly at <mauriurraco@gmail.com>
 
-## Buy me a coffee
+## License
+
+Released under the [MIT License](LICENSE).
+
+## Support
+
+If this project helped you, consider buying me a coffee ☕️
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/murraco)
