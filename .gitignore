@@ -59,3 +59,8 @@ typings/
 
 # macOS Finder metadata files
 .DS_Store
+
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/terraform.tfvars
