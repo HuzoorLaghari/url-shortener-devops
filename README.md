@@ -1,203 +1,443 @@
-# Node URL Shortener
+# 🚀 Node.js URL Shortener — AWS DevOps Project
 
-A URL shortener built with Express, Sequelize and MySQL, using Base58-encoded ids as short codes.
+A production-oriented DevOps project demonstrating how to containerize, provision, deploy, and automate a Node.js URL Shortener application using **Docker, AWS, Terraform, Nginx, and GitHub Actions**.
 
-## Stack
+The goal of this project is to implement an end-to-end DevOps workflow instead of working with individual tools in isolation.
 
-![](https://img.shields.io/badge/node_18+-✓-blue.svg)
-![](https://img.shields.io/badge/ES6-✓-blue.svg)
-![](https://img.shields.io/badge/express-✓-blue.svg)
-![](https://img.shields.io/badge/sequelize-✓-blue.svg)
+---
 
-## Screenshots
+## 🏗️ Architecture
 
-<p align="center">
-  <img src="https://github.com/murraco/node-url-shortener/blob/master/screenshot.png?raw=1" width="90%" alt="App screenshot" />
-</p>
-
-## Introduction
-
-### What is a URL shortener?
-
-URL shortening turns a long URL into a shorter one that redirects to the original. The short link is easier to share and remember.
-
-### How does this project implement it?
-
-The database stores each URL with an auto-increment numeric `id`. The short code in the path is that `id` encoded in **Base58** (alphanumeric, excluding ambiguous characters like `0`, `O`, `I`, `l`). When someone opens `/:encodedId`, the server decodes it to `id`, loads the row, and redirects to `longUrl`.
-
-There is a **unique index** on `longUrl` so the same URL is never stored twice; concurrent `POST` requests are handled with `findOrCreate` and a fallback if a uniqueness race occurs.
-
-## File structure
-
+```text
+                         Developer
+                             │
+                             │ git push
+                             ▼
+                         GitHub
+                             │
+                             ▼
+                     GitHub Actions
+                             │
+                  ┌──────────┴──────────┐
+                  │                     │
+               Lint & Test         Docker Build
+                  │                     │
+                  └──────────┬──────────┘
+                             │
+                             ▼
+                         AWS EC2
+                    ┌───────────────┐
+                    │     Nginx     │
+                    │      :80      │
+                    └───────┬───────┘
+                            │
+                            ▼
+                    Node.js Application
+                       Docker :3000
+                            │
+                            │ MySQL
+                            ▼
+                       AWS RDS
+                      MySQL :3306
 ```
-node-url-shortener/
+
+### Infrastructure
+
+```text
+Terraform
+    │
+    ├── VPC
+    ├── Subnets
+    ├── Internet Gateway
+    ├── Route Tables
+    ├── Security Groups
+    ├── EC2
+    └── RDS MySQL
+```
+
+---
+
+## 🛠️ Technology Stack
+
+| Technology     | Purpose                      |
+| -------------- | ---------------------------- |
+| Linux          | Server environment           |
+| Git            | Version control              |
+| GitHub         | Source code management       |
+| Node.js        | Application runtime          |
+| Express.js     | Web framework                |
+| MySQL          | Database                     |
+| Sequelize      | ORM                          |
+| Docker         | Application containerization |
+| Docker Compose | Container orchestration      |
+| AWS EC2        | Application server           |
+| AWS RDS        | Managed MySQL database       |
+| AWS VPC        | Network infrastructure       |
+| Terraform      | Infrastructure as Code       |
+| Nginx          | Reverse proxy                |
+| GitHub Actions | CI/CD automation             |
+
+---
+
+## 📂 Project Structure
+
+```text
+url-shortener-devops/
 │
 ├── api/
-│   ├── controllers/
-│   │   └── UrlController.js
-│   ├── models/
-│   │   └── Url.js
-│   └── helpers/
-│       └── base58.js
+│   └── models/
 │
 ├── config/
 │   ├── env/
 │   │   ├── development.js
-│   │   ├── index.js
 │   │   ├── production.js
-│   │   └── test.js
-│   ├── middleware/
-│   │   └── errorHandler.js
-│   ├── routes/
-│   │   ├── index.js
-│   │   └── url.js
-│   ├── database.js          * Sequelize CLI (migrations)
+│   │   ├── test.js
+│   │   └── index.js
+│   │
 │   ├── express.js
 │   └── sequelize.js
-│
-├── migrations/              * Sequelize migrations
-├── seeders/
-├── view/
-│   ├── css/
-│   ├── javascript/
-│   │   └── shorten.js
-│   └── index.html
 │
 ├── test/
 │   └── url.test.js
 │
-├── .eslintrc.json           * ESLint configuration file
-├── .gitignore               * Example git ignore file
-├── .sequelizerc             * Sequelize CLI paths
-├── index.js                 * Entry point of our Node's app
-├── LICENSE                  * MIT License
-├── package.json             * Defines our JavaScript dependencies
-├── package-lock.json        * Defines our exact JavaScript dependencies tree
-└── README.md                * This file
+├── public/
+│   ├── css/
+│   └── javascript/
+│
+├── Dockerfile
+├── docker-compose.yml
+├── package.json
+├── package-lock.json
+│
+├── terraform/
+│   ├── provider.tf
+│   ├── variables.tf
+│   ├── terraform.tfvars
+│   ├── vpc.tf
+│   ├── subnet.tf
+│   ├── internet-gateway.tf
+│   ├── route-table.tf
+│   ├── security-groups.tf
+│   ├── ec2.tf
+│   ├── rds.tf
+│   └── outputs.tf
+│
+└── .github/
+    └── workflows/
+        └── ci-cd.yml
 ```
 
-## Requirements
+---
 
-- **Node.js** 18 or newer (LTS recommended)
-- **MySQL** 5.7+ or 8.x
+# ☁️ AWS Infrastructure
 
-## Installation
+The infrastructure is provisioned using **Terraform**.
 
-1. Clone the repository:
+### Resources
+
+* VPC
+* Public and private subnets
+* Internet Gateway
+* Route tables
+* Security Groups
+* EC2 instance
+* Amazon RDS MySQL
+* SSH key pair
+
+Terraform provides reproducible infrastructure instead of manually creating AWS resources.
+
+---
+
+# 🐳 Docker
+
+The Node.js application is containerized using Docker.
+
+Build the image:
 
 ```bash
-git clone https://github.com/murraco/node-url-shortener.git
-cd node-url-shortener
+docker build -t url-shortener .
 ```
 
-2. Install dependencies:
+Run the application:
 
 ```bash
-npm install
+docker run -p 3000:3000 url-shortener
 ```
 
-3. Configure the database using the variables in [Configuration](#configuration) (optional `.env` or shell exports). The files under `config/env/` only supply defaults and read from `process.env`.
+---
 
-## Database setup
+# 🐳 Docker Compose
 
-### With Docker (MySQL 8)
+Docker Compose is used to manage the application and database containers during development/testing.
+
+Start services:
 
 ```bash
-docker run -d --name mysql-shortener \
-  -p 3306:3306 \
-  -e MYSQL_ROOT_PASSWORD=root \
-  mysql:8
+docker compose up -d
 ```
 
-Create the databases (adjust user/password if needed):
+Check containers:
 
 ```bash
-docker exec -it mysql-shortener mysql -uroot -proot -e "
-  CREATE DATABASE IF NOT EXISTS shortener_dev;
-  CREATE DATABASE IF NOT EXISTS shortener_test;
-  CREATE DATABASE IF NOT EXISTS shortener;
-"
+docker compose ps
 ```
 
-### Migrations (production and clean setups)
-
-After MySQL is running and credentials match `config/env` (or your env vars), apply the schema:
+View logs:
 
 ```bash
-npm run migrate
+docker compose logs
 ```
 
-In **development** only, the app also runs `sequelize.sync()` on startup so tables are created if missing. **Production** does not sync on startup; run migrations before deploying.
+Stop services:
 
-## Configuration
+```bash
+docker compose down
+```
 
-| Variable | Description | Default (from env files) |
-| -------- | ----------- | ------------------------- |
-| `NODE_ENV` | `development`, `test`, or `production` | `development` |
-| `PORT` | HTTP port | `3000` |
-| `DB_HOST` | MySQL host | `localhost` |
-| `DB_PORT` | MySQL port | `3306` |
-| `DB_NAME` | Database name | `shortener_dev` / `shortener_test` / `shortener` by environment |
-| `DB_USER` | MySQL user | `root` |
-| `DB_PASSWORD` | MySQL password | `root` (override in production) |
-| `PUBLIC_URL` or `BASE_URL` | Public base URL for short links (no trailing slash), e.g. `https://short.example.com` | If unset, derived from the incoming request (`req.protocol` and `Host`) |
-| `TRUST_PROXY` | Set to `true` or `1` if the app sits behind a reverse proxy so `X-Forwarded-*` is honored | unset |
+---
 
-Copy values into a `.env` file or your host’s secret manager. The `.env` file is gitignored; do not commit real passwords.
+# 🗄️ Database
 
-## Running the app
+The application uses **MySQL** through Sequelize.
 
-- **Production-style:** `npm start` → runs `node index.js` (connects to DB, no `sync` when `NODE_ENV=production`).
-- **Development with reload:** `npm run dev` → `nodemon index.js`.
+Configuration is controlled through environment variables:
 
-Then open `http://localhost:3000` (or your `PORT`).
+```env
+DB_HOST=
+DB_PORT=3306
+DB_NAME=
+DB_USER=
+DB_PASSWORD=
+```
 
-## API
+Production deployments use **Amazon RDS MySQL** rather than relying on a database running directly on the EC2 host.
 
-### `GET /api-status`
+Sensitive credentials are not committed to Git.
 
-Health check. **Response:** `{ "status": "ok" }`
+---
 
-### `POST /api/shorten`
+# 🌐 Nginx
 
-Creates or returns an existing short link for a URL.
+Nginx is used as a reverse proxy in front of the Node.js application.
 
-- **Body (JSON):** `{ "url": "https://example.com/path" }`
-- **Success:** `201` — `{ "shortUrl": "<public-base>/<base58-id>" }`
-- **Errors:** `400` — `{ "error": "..." }` for missing/invalid URL or non-http(s) scheme
-- **Server errors:** `500` — `{ "error": "Internal server error" }`
+Request flow:
 
-Register new single-segment routes **before** `/:encodedId` in the router so they are not treated as short codes.
+```text
+Client
+   │
+   ▼
+Nginx :80
+   │
+   ▼
+Node.js :3000
+   │
+   ▼
+MySQL / RDS :3306
+```
 
-### `GET /:encodedId`
+This allows the application to expose a standard HTTP endpoint while keeping the Node.js service behind the reverse proxy.
 
-Redirects (`302`) to the stored URL, or to the site root if the code is unknown.
+---
 
-## Testing
+# 🔄 CI/CD with GitHub Actions
 
-Tests use `NODE_ENV=test` (see `test/url.test.js`), the `shortener_test` database (unless overridden with `DB_NAME`), and `Url.sync({ force: true })` in a `before` hook to reset the table.
+The project includes a GitHub Actions pipeline.
 
-Requirements: MySQL running and the test database created.
+Pipeline flow:
+
+```text
+Git Push
+   │
+   ▼
+GitHub Actions
+   │
+   ├── Checkout
+   ├── Setup Node.js
+   ├── npm ci
+   ├── ESLint
+   ├── Mocha Tests
+   ├── Docker Build
+   │
+   ▼
+EC2 Deployment
+   │
+   ├── SSH
+   ├── git pull
+   ├── docker compose build
+   └── docker compose up -d
+```
+
+The pipeline prevents deployment when the application tests fail.
+
+---
+
+# 🧪 Testing
+
+Install dependencies:
+
+```bash
+npm ci
+```
+
+Run tests:
 
 ```bash
 npm test
 ```
 
-`npm audit` was run after dependency updates; a few advisories may remain in transitive dev dependencies (for example Mocha). Re-run `npm audit` periodically.
+Run lint:
 
-## Contribution
+```bash
+npm run lint
+```
 
-- Report issues
-- Open pull request with improvements
-- Spread the word
-- Reach out to me directly at <mauriurraco@gmail.com>
+The CI pipeline also runs tests against a temporary MySQL service.
 
-## License
+---
 
-Released under the [MIT License](LICENSE).
+# 🚀 Deployment
 
-## Support
+### 1. Provision AWS infrastructure
 
-If this project helped you, consider buying me a coffee ☕️
+```bash
+cd terraform
+terraform init
+terraform validate
+terraform plan
+terraform apply
+```
 
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/murraco)
+### 2. Connect to EC2
+
+```bash
+ssh -i ~/.ssh/id_ed25519 ubuntu@<EC2_PUBLIC_IP>
+```
+
+### 3. Clone the repository
+
+```bash
+git clone https://github.com/<USERNAME>/<REPOSITORY>.git
+cd <REPOSITORY>
+```
+
+### 4. Start the application
+
+```bash
+docker compose up -d --build
+```
+
+### 5. Verify
+
+```bash
+docker ps
+```
+
+The application can then be accessed through the configured EC2 endpoint.
+
+---
+
+# 🔐 Security Considerations
+
+* SSH private keys are never committed to Git.
+* Terraform state files are ignored by Git.
+* Terraform variables containing sensitive information are not committed.
+* Database credentials are supplied through environment variables/secrets.
+* AWS Security Groups restrict network access.
+* Production database access should be limited to the application layer.
+
+---
+
+# 📊 DevOps Workflow
+
+This project demonstrates the following DevOps lifecycle:
+
+```text
+PLAN
+  ↓
+Terraform
+  ↓
+PROVISION
+  ↓
+AWS Infrastructure
+  ↓
+BUILD
+  ↓
+Docker
+  ↓
+TEST
+  ↓
+GitHub Actions
+  ↓
+DEPLOY
+  ↓
+EC2
+  ↓
+REVERSE PROXY
+  ↓
+Nginx
+  ↓
+APPLICATION
+  ↓
+DATABASE
+  ↓
+RDS MySQL
+```
+
+---
+
+# 🎯 What I Learned
+
+Through this project, I practiced:
+
+* AWS infrastructure provisioning
+* Infrastructure as Code with Terraform
+* Linux server administration
+* Docker containerization
+* Docker Compose
+* Node.js application deployment
+* MySQL and RDS integration
+* Nginx reverse proxy configuration
+* Git and GitHub workflows
+* CI/CD with GitHub Actions
+* Automated EC2 deployments
+* AWS networking and Security Groups
+* Troubleshooting real-world deployment issues
+
+---
+
+# 🚧 Future Improvements
+
+Planned improvements include:
+
+* HTTPS with SSL/TLS
+* AWS Secrets Manager / Parameter Store
+* Docker image registry
+* Versioned Docker image deployments
+* Blue/Green or Rolling deployments
+* Automated rollback
+* Prometheus monitoring
+* Grafana dashboards
+* Centralized logging
+* Improved AWS security
+* Auto Scaling
+* Application health checks
+
+---
+
+# 👨‍💻 Author
+
+**Huzoor Laghari**
+
+Computer Science Student | Cloud & DevOps Learner
+
+Focused on building practical skills in:
+
+**AWS • Linux • Docker • Terraform • CI/CD • Cloud Computing • DevOps**
+
+---
+
+## ⭐ Project
+
+If you find this project useful, consider giving the repository a ⭐.
+
+This project was built as a hands-on learning exercise to understand how modern DevOps tools work together in a real-world cloud deployment workflow.
